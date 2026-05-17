@@ -224,36 +224,6 @@
         .panel-section { margin-bottom: 2.5rem; }
         .panel-section h2 { font-size: 1rem; margin-bottom: 1rem; }
         .panel-hint { color: var(--muted); font-size: 0.8125rem; margin-bottom: 0.75rem; }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-        }
-        .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.85rem 1rem;
-        }
-        .stat-card .label { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.25rem; }
-        .stat-card .value { font-size: 1.35rem; font-weight: 600; }
-        .stat-card.ok .value { color: var(--online); }
-        .stat-card.denied .value { color: var(--offline); }
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.25rem;
-        }
-        .chart-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-        }
-        .chart-card h3 { font-size: 0.875rem; color: var(--muted); margin-bottom: 0.75rem; font-weight: 500; }
-        .chart-card canvas { max-height: 220px; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
         .data-table th, .data-table td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; }
         .data-table th { background: var(--surface); color: var(--muted); }
@@ -270,6 +240,78 @@
         .ip-list { list-style: none; }
         .ip-list li { padding: 0.35rem 0; display: flex; align-items: center; gap: 0.75rem; }
         .ip-list .muted { color: var(--muted); }
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+        }
+        .stat-value { display: block; font-size: 1.35rem; font-weight: 600; line-height: 1.2; }
+        .stat-label { display: block; font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .chart-card-wide { grid-column: 1 / -1; }
+        .chart-card h3 { font-size: 0.875rem; color: var(--muted); font-weight: 500; margin-bottom: 0.85rem; }
+        .chart-empty { color: var(--muted); font-size: 0.8125rem; }
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 0.35rem;
+            height: 140px;
+            padding-top: 0.5rem;
+        }
+        .bar-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            min-width: 0;
+        }
+        .bar-fill {
+            width: 100%;
+            max-width: 2.5rem;
+            background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
+        }
+        .bar-label { font-size: 0.65rem; color: var(--muted); margin-top: 0.35rem; }
+        .h-bar-list { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+        .h-bar-list li {
+            display: grid;
+            grid-template-columns: 5.5rem 1fr 2rem;
+            gap: 0.5rem;
+            align-items: center;
+            font-size: 0.8125rem;
+        }
+        .chart-card-wide .h-bar-list li { grid-template-columns: 10rem 1fr 2rem; }
+        .h-bar-label { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .h-bar-track {
+            height: 8px;
+            background: var(--bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .h-bar-fill { display: block; height: 100%; background: #64748b; border-radius: 4px; }
+        .h-bar-fill.accent { background: var(--accent); }
+        .h-bar-count { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
     </style>
 </head>
 <body<?= !empty($authLayout) ? ' class="auth-page"' : '' ?>>

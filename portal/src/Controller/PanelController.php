@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Portal\Controller;
 
-use Portal\Service\AccessLogStats;
 use Portal\Service\KeyRepository;
+use Portal\Service\PanelChartStats;
 use Portal\Service\ToolsRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -72,15 +72,15 @@ final class PanelController
         $showKeys = in_array($toolRuntime, ['php', 'docker'], true);
         $toolKeys = $showKeys ? $this->keys->listForTool($id) : [];
         $accessLog = AccessLogger::listForTool($id);
-        $accessStats = AccessLogStats::summarize($accessLog);
         $blockedIps = IpBlocklist::forTool($id);
+        $chartStats = PanelChartStats::build($accessLog, $toolKeys, $blockedIps);
 
         ob_start();
         $pageTitle = '面板 · ' . ($tool['name'] ?? $id);
         $toolId = $id;
         $toolName = (string) ($tool['name'] ?? $id);
         $showKeys = $showKeys;
-        $accessStats = $accessStats;
+        $chartStats = $chartStats;
         require dirname(__DIR__, 2) . '/templates/panel/tool.php';
         $html = (string) ob_get_clean();
         $response->getBody()->write($html);

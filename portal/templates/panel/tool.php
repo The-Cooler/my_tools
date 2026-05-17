@@ -6,7 +6,7 @@
 /** @var array<int, array<string, mixed>> $toolKeys */
 /** @var array<int, array<string, mixed>> $accessLog */
 /** @var array<int, string> $blockedIps */
-/** @var array{totals: array{all: int, ok: int, denied: int, unique_ips: int}, by_day: array<int, array{label: string, count: int}>, by_event: array<int, array{label: string, count: int}>} $accessStats */
+/** @var array{summary:array, days:array, events:array, top_ips:array} $chartStats */
 
 ob_start();
 ?>
@@ -67,42 +67,79 @@ ob_start();
 
     <section class="panel-section">
         <h2>访问统计</h2>
-        <p class="panel-hint">基于最近 200 条访问记录汇总</p>
-        <div class="stats-grid">
+        <p class="panel-hint">基于最近 <?= (int) count($chartStats['days'] ?? []) ?> 天、最多 200 条访问记录</p>
+        <div class="stat-cards">
             <div class="stat-card">
-                <div class="label">总访问</div>
-                <div class="value"><?= (int) $accessStats['totals']['all'] ?></div>
-            </div>
-            <div class="stat-card ok">
-                <div class="label">成功</div>
-                <div class="value"><?= (int) $accessStats['totals']['ok'] ?></div>
-            </div>
-            <div class="stat-card denied">
-                <div class="label">拒绝</div>
-                <div class="value"><?= (int) $accessStats['totals']['denied'] ?></div>
+                <span class="stat-value"><?= (int) ($chartStats['summary']['access'] ?? 0) ?></span>
+                <span class="stat-label">记录条数</span>
             </div>
             <div class="stat-card">
-                <div class="label">独立 IP</div>
-                <div class="value"><?= (int) $accessStats['totals']['unique_ips'] ?></div>
+                <span class="stat-value"><?= (int) ($chartStats['summary']['unique_ip'] ?? 0) ?></span>
+                <span class="stat-label">独立 IP</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value"><?= (int) ($chartStats['summary']['success_rate'] ?? 0) ?>%</span>
+                <span class="stat-label">成功占比</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value"><?= (int) ($chartStats['summary']['blocked'] ?? 0) ?></span>
+                <span class="stat-label">拉黑 IP</span>
             </div>
         </div>
-        <?php if ($accessStats['totals']['all'] > 0): ?>
-        <div class="charts-grid">
+        <div class="chart-grid">
             <div class="chart-card">
-                <h3>近 7 日访问趋势</h3>
-                <canvas id="chart-by-day" height="200"></canvas>
+                <h3>近 7 日访问</h3>
+                <?php if (($chartStats['days'] ?? []) === []): ?>
+                    <p class="chart-empty">暂无数据</p>
+                <?php else: ?>
+                    <div class="bar-chart" role="img" aria-label="近7日访问量柱状图">
+                        <?php foreach ($chartStats['days'] as $bar): ?>
+                            <div class="bar-col" title="<?= (int) $bar['count'] ?> 次">
+                                <div class="bar-fill" style="height: <?= max(4, (int) $bar['pct']) ?>%"></div>
+                                <span class="bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES, 'UTF-8') ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
             <div class="chart-card">
                 <h3>事件分布</h3>
-                <canvas id="chart-by-event" height="200"></canvas>
+                <?php if (($chartStats['events'] ?? []) === []): ?>
+                    <p class="chart-empty">暂无数据</p>
+                <?php else: ?>
+                    <ul class="h-bar-list">
+                        <?php foreach ($chartStats['events'] as $row): ?>
+                            <li>
+                                <span class="h-bar-label"><?= htmlspecialchars($row['label'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <span class="h-bar-track"><span class="h-bar-fill" style="width: <?= max(2, (int) $row['pct']) ?>%"></span></span>
+                                <span class="h-bar-count"><?= (int) $row['count'] ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+            <div class="chart-card chart-card-wide">
+                <h3>访问最多的 IP（Top 5）</h3>
+                <?php if (($chartStats['top_ips'] ?? []) === []): ?>
+                    <p class="chart-empty">暂无数据</p>
+                <?php else: ?>
+                    <ul class="h-bar-list">
+                        <?php foreach ($chartStats['top_ips'] as $row): ?>
+                            <li>
+                                <span class="h-bar-label mono"><?= htmlspecialchars($row['ip'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <span class="h-bar-track"><span class="h-bar-fill accent" style="width: <?= max(2, (int) $row['pct']) ?>%"></span></span>
+                                <span class="h-bar-count"><?= (int) $row['count'] ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
             </div>
         </div>
-        <?php endif; ?>
     </section>
 
     <section class="panel-section">
-        <h2>访问明细</h2>
-        <p class="panel-hint">访客 IP、密钥、设备、是否持有有效令牌</p>
+        <h2>访问记录</h2>
+        <p class="panel-hint">记录访客 IP、密钥、设备、是否持有有效令牌（最近 200 条）</p>
         <table class="data-table">
             <thead>
                 <tr><th>时间</th><th>IP</th><th>事件</th><th>密钥</th><th>设备</th><th>令牌</th></tr>
@@ -145,9 +182,6 @@ ob_start();
     </section>
 </main>
 
-<?php if (($accessStats['totals']['all'] ?? 0) > 0): ?>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<?php endif; ?>
 <script>
 (function () {
     const toolId = <?= json_encode($toolId, JSON_UNESCAPED_UNICODE) ?>;
@@ -199,54 +233,6 @@ ob_start();
             }).then(function () { location.reload(); });
         });
     });
-
-    const chartData = <?= json_encode($accessStats, JSON_UNESCAPED_UNICODE) ?>;
-    if (chartData.totals.all > 0 && typeof Chart !== 'undefined') {
-        const gridColor = '#2d3a4f';
-        const textColor = '#8b9cb3';
-        const dayCtx = document.getElementById('chart-by-day');
-        if (dayCtx) {
-            new Chart(dayCtx, {
-                type: 'bar',
-                data: {
-                    labels: chartData.by_day.map(function (d) { return d.label; }),
-                    datasets: [{
-                        label: '访问次数',
-                        data: chartData.by_day.map(function (d) { return d.count; }),
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
-                        y: { ticks: { color: textColor }, grid: { color: gridColor }, beginAtZero: true }
-                    }
-                }
-            });
-        }
-        const eventCtx = document.getElementById('chart-by-event');
-        if (eventCtx && chartData.by_event.length > 0) {
-            new Chart(eventCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: chartData.by_event.map(function (d) { return d.label; }),
-                    datasets: [{
-                        data: chartData.by_event.map(function (d) { return d.count; }),
-                        backgroundColor: ['#3b82f6', '#22c55e', '#ef4444', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#6b7280']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { color: textColor, boxWidth: 12 } } }
-                }
-            });
-        }
-    }
 })();
 </script>
 <?php
