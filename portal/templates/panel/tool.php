@@ -6,6 +6,7 @@
 /** @var array<int, array<string, mixed>> $toolKeys */
 /** @var array<int, array<string, mixed>> $accessLog */
 /** @var array<int, string> $blockedIps */
+/** @var array{totals: array{all: int, ok: int, denied: int, unique_ips: int}, by_day: array<int, array{label: string, count: int}>, by_event: array<int, array{label: string, count: int}>} $accessStats */
 
 ob_start();
 ?>
@@ -65,8 +66,43 @@ ob_start();
     <?php endif; ?>
 
     <section class="panel-section">
-        <h2>访问记录</h2>
-        <p class="panel-hint">记录访客 IP、密钥、设备、是否持有有效令牌（最近 200 条）</p>
+        <h2>访问统计</h2>
+        <p class="panel-hint">基于最近 200 条访问记录汇总</p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">总访问</div>
+                <div class="value"><?= (int) $accessStats['totals']['all'] ?></div>
+            </div>
+            <div class="stat-card ok">
+                <div class="label">成功</div>
+                <div class="value"><?= (int) $accessStats['totals']['ok'] ?></div>
+            </div>
+            <div class="stat-card denied">
+                <div class="label">拒绝</div>
+                <div class="value"><?= (int) $accessStats['totals']['denied'] ?></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">独立 IP</div>
+                <div class="value"><?= (int) $accessStats['totals']['unique_ips'] ?></div>
+            </div>
+        </div>
+        <?php if ($accessStats['totals']['all'] > 0): ?>
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>近 7 日访问趋势</h3>
+                <canvas id="chart-by-day" height="200"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>事件分布</h3>
+                <canvas id="chart-by-event" height="200"></canvas>
+            </div>
+        </div>
+        <?php endif; ?>
+    </section>
+
+    <section class="panel-section">
+        <h2>访问明细</h2>
+        <p class="panel-hint">访客 IP、密钥、设备、是否持有有效令牌</p>
         <table class="data-table">
             <thead>
                 <tr><th>时间</th><th>IP</th><th>事件</th><th>密钥</th><th>设备</th><th>令牌</th></tr>
@@ -109,6 +145,9 @@ ob_start();
     </section>
 </main>
 
+<?php if (($accessStats['totals']['all'] ?? 0) > 0): ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<?php endif; ?>
 <script>
 (function () {
     const toolId = <?= json_encode($toolId, JSON_UNESCAPED_UNICODE) ?>;
@@ -160,6 +199,54 @@ ob_start();
             }).then(function () { location.reload(); });
         });
     });
+
+    const chartData = <?= json_encode($accessStats, JSON_UNESCAPED_UNICODE) ?>;
+    if (chartData.totals.all > 0 && typeof Chart !== 'undefined') {
+        const gridColor = '#2d3a4f';
+        const textColor = '#8b9cb3';
+        const dayCtx = document.getElementById('chart-by-day');
+        if (dayCtx) {
+            new Chart(dayCtx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.by_day.map(function (d) { return d.label; }),
+                    datasets: [{
+                        label: '访问次数',
+                        data: chartData.by_day.map(function (d) { return d.count; }),
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                        y: { ticks: { color: textColor }, grid: { color: gridColor }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+        const eventCtx = document.getElementById('chart-by-event');
+        if (eventCtx && chartData.by_event.length > 0) {
+            new Chart(eventCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.by_event.map(function (d) { return d.label; }),
+                    datasets: [{
+                        data: chartData.by_event.map(function (d) { return d.count; }),
+                        backgroundColor: ['#3b82f6', '#22c55e', '#ef4444', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#6b7280']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: textColor, boxWidth: 12 } } }
+                }
+            });
+        }
+    }
 })();
 </script>
 <?php

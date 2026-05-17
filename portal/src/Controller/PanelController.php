@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Portal\Controller;
 
+use Portal\Service\AccessLogStats;
 use Portal\Service\KeyRepository;
 use Portal\Service\ToolsRegistry;
 use Psr\Http\Message\ResponseInterface;
@@ -71,6 +72,7 @@ final class PanelController
         $showKeys = in_array($toolRuntime, ['php', 'docker'], true);
         $toolKeys = $showKeys ? $this->keys->listForTool($id) : [];
         $accessLog = AccessLogger::listForTool($id);
+        $accessStats = AccessLogStats::summarize($accessLog);
         $blockedIps = IpBlocklist::forTool($id);
 
         ob_start();
@@ -78,6 +80,7 @@ final class PanelController
         $toolId = $id;
         $toolName = (string) ($tool['name'] ?? $id);
         $showKeys = $showKeys;
+        $accessStats = $accessStats;
         require dirname(__DIR__, 2) . '/templates/panel/tool.php';
         $html = (string) ob_get_clean();
         $response->getBody()->write($html);

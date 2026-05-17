@@ -224,6 +224,36 @@
         .panel-section { margin-bottom: 2.5rem; }
         .panel-section h2 { font-size: 1rem; margin-bottom: 1rem; }
         .panel-hint { color: var(--muted); font-size: 0.8125rem; margin-bottom: 0.75rem; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+        }
+        .stat-card .label { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.25rem; }
+        .stat-card .value { font-size: 1.35rem; font-weight: 600; }
+        .stat-card.ok .value { color: var(--online); }
+        .stat-card.denied .value { color: var(--offline); }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .chart-card h3 { font-size: 0.875rem; color: var(--muted); margin-bottom: 0.75rem; font-weight: 500; }
+        .chart-card canvas { max-height: 220px; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
         .data-table th, .data-table td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; }
         .data-table th { background: var(--surface); color: var(--muted); }
