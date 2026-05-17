@@ -1,0 +1,22 @@
+# =============================================================================
+# 门户认证 — 复制为 auth.yaml
+# =============================================================================
+# 作用：
+#   - admin：管理员登录门户（/login）后的 Session
+#   - app_secret：签发访客访问工具用的 access_token（HMAC）
+#
+# 不放在此文件的：
+#   - 访客密钥 → 门户「工具面板」管理，存 storage/auth/keys.json
+#
+# 使用：
+#   1. cp config/auth.yaml.template config/auth.yaml
+#   2. 设置 app_secret 为随机长字符串（≥32 字符）
+#   3. php config/hash-password.php → 将 hash 填入 admin.password_hash
+# =============================================================================
+
+app_secret: "请替换为随机长字符串"
+
+admin:
+  username: admin
+  # 由 config/hash-password.php 生成，勿写明文密码
+  password_hash: "$2y$10$REPLACE_ME"

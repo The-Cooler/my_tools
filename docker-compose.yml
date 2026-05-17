@@ -1,0 +1,8 @@
+# 未配置 Docker 工具时保持为空即可。
+# 需要时复制 docker-compose.yml.template，添加上游开源镜像 service，并在 config/tools.yaml 登记。
+
+services: {}
+
+networks:
+  tools_net:
+    driver: bridge

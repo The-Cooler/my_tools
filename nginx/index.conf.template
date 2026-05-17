@@ -1,0 +1,55 @@
+# =============================================================================
+# 门户 Nginx — 复制内容到 sites-enabled 或 include 进 http {}
+# =============================================================================
+# 作用：生产环境托管 portal/public（Slim 入口 index.php）。
+#
+# 与开发方式二选一：
+#   开发：cd portal/public && php -S 127.0.0.1:8080 router.php
+#   生产：使用本文件 + PHP-FPM（不使用 router.php）
+#
+# 使用前必改：
+#   1. $my_tools_root → 项目绝对路径
+#   2. fastcgi_pass   → 本机 PHP-FPM 的 listen（见 pool 配置，非固定 9000）
+#   3. server_name、listen、SSL 等按站点调整
+#
+# 安全：root 必须是 portal/public，不得指向项目根，否则会暴露 config/。
+# =============================================================================
+
+server {
+    listen 80;
+    server_name localhost;
+
+    set $my_tools_root /var/www/my_tools;
+
+    root $my_tools_root/portal/public;
+    index index.php;
+
+    client_max_body_size 32m;
+
+    location ~ /\. {
+        deny all;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ ^/index\.php$ {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass 127.0.0.1:9000;    # ← 改成你的 PHP-FPM socket 或地址
+        fastcgi_read_timeout 120s;
+    }
+
+    location ~ \.php$ {
+        deny all;
+    }
+
+    # 可选：按路径反代到本机工具端口（需与 tools.yaml 一致，并改 tools.yaml 的 host/path）
+    # location /tool/json-formatter/ {
+    #     proxy_pass http://127.0.0.1:8101/;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    # }
+}

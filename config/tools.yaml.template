@@ -1,0 +1,56 @@
+# =============================================================================
+# 工具注册表 — 复制为 tools.yaml
+# =============================================================================
+# 作用：门户首页列表、启停目标、跳转 URL、健康检查地址，均由此文件驱动。
+# 谁读取：portal（ToolsRegistry）、启停逻辑（ToolProcessManager）。
+#
+# 使用：
+#   1. cp config/tools.yaml.template config/tools.yaml
+#   2. 按下面字段增删 tools 条目
+#   3. 改完后刷新门户即可（有文件缓存，见 storage/cache）
+#
+# 端口约定（建议）：
+#   8080        门户（不由本文件启动，自行 php -S 或 Nginx）
+#   8101-8199   runtime: php
+#   8201-8299   runtime: docker（需在 docker-compose.yml 有对应 service）
+# =============================================================================
+
+version: 1
+
+defaults:
+  # 生成工具访问 URL 时使用的主机名（门户跳转、健康检查）
+  host: 127.0.0.1
+  # 默认健康检查路径；单个工具可用 health_path 覆盖（多数 Docker 镜像用 /）
+  health_path: /health
+
+tools:
+  # --- 示例：自研 PHP 工具（目录 tools/{id}/）---
+  - id: json-formatter          # 唯一 ID，与 tools/ 目录名一致
+    name: JSON 格式化            # 首页显示名称
+    description: 说明文字
+    category: dev               # 首页分组 / 侧栏分类
+    runtime: php                # php | docker | external
+    port: 8101                  # 本机监听端口（php/docker 必填）
+    path: /                     # 工具内路径，拼进跳转 URL
+    enabled: true               # false 则门户不展示
+    tags: [json, dev]           # 可选，搜索用
+
+  # --- 示例：Docker 上游开源镜像（需自行在 docker-compose.yml 写 image:）---
+  # - id: my-oss-app
+  #   name: 某开源 Web 工具
+  #   description: 直接运行官方镜像，无需在本仓库写 Dockerfile
+  #   category: ops
+  #   runtime: docker
+  #   port: 8201                # 与 compose ports 左侧主机端口一致
+  #   path: /
+  #   compose_service: my-oss-app   # 与 docker-compose.yml 中 service 名一致
+  #   health_path: /              # 无 /health 时用 /
+  #   enabled: true
+  #   tags: [docker]
+
+  # --- 示例：外部链接（不启停、无密钥）---
+  # - id: docs
+  #   name: 外部文档
+  #   runtime: external
+  #   url: https://example.com/docs
+  #   enabled: true

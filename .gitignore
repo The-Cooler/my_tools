@@ -1,0 +1,13 @@
+/vendor/
+/portal/vendor/
+/tools/*/vendor/
+/storage/cache/*
+/storage/runtime/*
+/storage/auth/*
+!/storage/auth/.gitkeep
+*.yaml
+*.log
+.DS_Store
+Thumbs.db
+.git/
+.jj/

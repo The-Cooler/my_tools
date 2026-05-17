@@ -1,0 +1,42 @@
+# =============================================================================
+# Docker 工具编排 — 复制为项目根目录 docker-compose.yml
+# =============================================================================
+# 作用：为 runtime: docker 的工具提供「上游开源镜像」容器。
+#       直接写 image:，无需在本仓库编写 Dockerfile 或 docker/tools/ 目录。
+#
+# 使用：
+#   1. cp docker-compose.yml.template docker-compose.yml
+#   2. 取消注释或添加 service（官方文档中的 image、ports、volumes）
+#   3. 在 config/tools.yaml 增加对应条目（runtime: docker, compose_service, port）
+#   4. 门户总览页「启动」，或：docker compose up -d <service名>
+#
+# 注意：容器内应用无法使用本站 ToolGate；公网暴露请配合门户 /use 密钥或前置反代。
+# =============================================================================
+
+services:
+  # 示例结构（请换成你实际要跑的开源项目镜像，勿直接沿用未核实的镜像）：
+  #
+  # my-service-name:
+  #   image: 上游仓库/镜像名:标签
+  #   ports:
+  #     - "8201:容器内端口"
+  #   networks:
+  #     - tools_net
+  #   restart: unless-stopped
+  #   # volumes / environment 按上游文档配置
+
+  # 本地开发可选 Redis（宝塔生产请用面板安装的 Redis，勿依赖此容器）：
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - tools_net
+  #   restart: unless-stopped
+
+networks:
+  tools_net:
+    driver: bridge
+
+# volumes:
+#   按上游镜像文档添加
