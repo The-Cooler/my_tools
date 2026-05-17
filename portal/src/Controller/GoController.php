@@ -47,7 +47,7 @@ final class GoController
 
         $url = $this->registry->resolveUrl($tool);
 
-        if (in_array($runtime, ['php', 'docker'], true)) {
+        if ($runtime === 'php') {
             $deviceId = 'admin-' . session_id();
             $token = $this->tokens->issue($id, 'admin', $deviceId);
             $sep = str_contains($url, '?') ? '&' : '?';

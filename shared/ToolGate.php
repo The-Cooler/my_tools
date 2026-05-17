@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Shared;
 
+require_once __DIR__ . '/AccessToken.php';
+require_once __DIR__ . '/ClientIp.php';
+require_once __DIR__ . '/IpBlocklist.php';
+require_once __DIR__ . '/AccessLogger.php';
+
 /**
  * PHP 工具入口校验：持门户签发的 access_token 或 Cookie 访问。
  * /health 不校验，供门户探活。
@@ -26,39 +31,25 @@ final class ToolGate
         }
 
         $root = dirname(__DIR__);
-        $authPath = $root . '/config/auth.yaml';
-        if (!is_file($authPath)) {
-            http_response_code(503);
-            header('Content-Type: text/plain; charset=utf-8');
-            echo '未配置 config/auth.yaml';
-            exit;
-        }
-
-        if (!class_exists(\Symfony\Component\Yaml\Yaml::class)) {
-            $autoload = $root . '/portal/vendor/autoload.php';
-            if (is_file($autoload)) {
-                require_once $autoload;
-            }
-        }
-
-        $auth = \Symfony\Component\Yaml\Yaml::parseFile($authPath);
-        $secret = (string) ($auth['app_secret'] ?? '');
-        if ($secret === '' || str_contains($secret, '请替换')) {
-            http_response_code(503);
-            echo 'app_secret 未配置';
-            exit;
-        }
 
         $cookieName = 'tool_access_' . preg_replace('/[^a-z0-9_-]/i', '', $toolId);
-        $token = $_GET['access_token'] ?? $_COOKIE[$cookieName] ?? '';
+        $token = trim((string) ($_GET['access_token'] ?? $_COOKIE[$cookieName] ?? ''));
 
         $payload = null;
-        if ($token === '' || !self::verifyToken($token, $toolId, $secret, $payload)) {
+        try {
+            $ok = $token !== '' && AccessToken::verify($token, $toolId, $root, $payload);
+        } catch (\Throwable) {
+            $ok = false;
+        }
+
+        if (!$ok) {
             AccessLogger::log($toolId, $ip, 'access_denied', null, null, false);
             http_response_code(403);
             header('Content-Type: text/html; charset=utf-8');
             echo '<!DOCTYPE html><html lang="zh-CN"><meta charset="UTF-8"><body>';
-            echo '<p>需要有效访问密钥。请从工作站入口使用密钥进入。</p>';
+            echo '<p>需要有效访问密钥。</p>';
+            echo '<p>请从门户首页登录后点击「打开」；若刚修改过 config/auth.yaml 中的 app_secret，请重新打开，勿使用旧链接。</p>';
+            echo '<p><a href="/">返回工作站</a></p>';
             echo '</body></html>';
             exit;
         }
@@ -73,51 +64,56 @@ final class ToolGate
         );
 
         if (isset($_GET['access_token'])) {
+            $cookiePath = self::cookiePath();
             setcookie($cookieName, $token, [
                 'expires' => time() + 86400 * 7,
-                'path' => '/',
+                'path' => $cookiePath,
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
+
+            $target = self::publicPath();
+            $query = $_GET;
+            unset($query['access_token']);
+            if ($query !== []) {
+                $target .= '?' . http_build_query($query);
+            }
+            header('Location: ' . $target, true, 302);
+            exit;
         }
     }
 
-    /**
-     * @param array<string, mixed>|null $payloadOut
-     */
-    private static function verifyToken(string $token, string $expectedToolId, string $secret, ?array &$payloadOut = null): bool
+    /** Nginx 反代子路径时由 proxy_set_header X-Forwarded-Prefix 传入，如 /apps/json-formatter */
+    private static function forwardedPrefix(): string
     {
-        $parts = explode('.', $token, 2);
-        if (count($parts) !== 2) {
-            return false;
+        $prefix = trim((string) ($_SERVER['HTTP_X_FORWARDED_PREFIX'] ?? ''));
+        if ($prefix === '') {
+            return '';
         }
 
-        $payloadJson = base64_decode(strtr($parts[0], '-_', '+/'), true);
-        $sig = base64_decode(strtr($parts[1], '-_', '+/'), true);
-        if ($payloadJson === false || $sig === false) {
-            return false;
-        }
-
-        $expectedSig = hash_hmac('sha256', $parts[0], $secret, true);
-        if (!hash_equals($expectedSig, $sig)) {
-            return false;
-        }
-
-        $payload = json_decode($payloadJson, true);
-        if (!is_array($payload)) {
-            return false;
-        }
-
-        if (($payload['tool_id'] ?? '') !== $expectedToolId) {
-            return false;
-        }
-
-        if (($payload['exp'] ?? 0) < time()) {
-            return false;
-        }
-
-        $payloadOut = $payload;
-
-        return true;
+        return '/' . trim($prefix, '/');
     }
+
+    /** 浏览器应使用的路径（含反代前缀，避免 302 到站点根目录 /） */
+    private static function publicPath(): string
+    {
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+        $prefix = self::forwardedPrefix();
+        if ($prefix === '') {
+            return $path;
+        }
+        if ($path === '/' || $path === '') {
+            return $prefix . '/';
+        }
+
+        return $prefix . $path;
+    }
+
+    private static function cookiePath(): string
+    {
+        $prefix = self::forwardedPrefix();
+
+        return $prefix !== '' ? $prefix . '/' : '/';
+    }
+
 }

@@ -203,7 +203,12 @@
         }
         .main-tab:hover { color: var(--text); }
         .main-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-        .back-link { color: var(--muted); font-size: 0.875rem; text-decoration: none; display: block; margin-bottom: 0.35rem; }
+        .back-link {
+            color: var(--muted); font-size: 0.875rem; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.35rem; margin-bottom: 0.35rem;
+        }
+        .back-link:hover { color: var(--text); }
+        .back-link .icon-back { width: 1rem; height: 1rem; flex-shrink: 0; }
         .panel-list-main { padding: 1.5rem 2rem; }
         .panel-list-hint { color: var(--muted); font-size: 0.875rem; margin-bottom: 1rem; }
         .panel-list { display: flex; flex-direction: column; gap: 0.5rem; max-width: 640px; }

@@ -58,6 +58,16 @@ my_tools/
 
 ```sh
 cd portal && composer install
+```
+
+门户已锁定 `slim 4.13`（兼容仅提供 `psr/http-factory` 1.0.x 的旧镜像）。`composer.json` 内已指定官方 Packagist；若仍失败，在 `portal` 目录执行：
+
+```sh
+composer config -g --unset repos.packagist
+composer update
+```
+
+```sh
 cp config/auth.yaml.template config/auth.yaml
 cp config/tools.yaml.template config/tools.yaml   # 若尚无 tools.yaml
 php config/hash-password.php
@@ -67,7 +77,11 @@ cd portal/public && php -S 127.0.0.1:8080 router.php
 
 浏览器打开 http://127.0.0.1:8080/ 登录。访客密钥在 **工具面板** 生成。
 
-生产环境用 [nginx/index.conf.template](nginx/index.conf.template)，不用 `router.php`。宝塔部署见 [docs/baota.md](docs/baota.md)。
+生产环境用 [nginx/index.conf.template](nginx/index.conf.template)，不用 `router.php`。
+
+**改 `composer.json` 的 autoload 后**（例如新增 `Shared\\`），在服务器 `portal` 目录执行：`composer dump-autoload -o`。
+
+**宝塔若 `/login` 报 Nginx 404**：网站 → 伪静态，粘贴 [nginx/baota-rewrite.conf](nginx/baota-rewrite.conf) 中的 `location /` 规则，并重载 Nginx。`open_basedir` 须包含 `/www/wwwroot/my_tools/:/tmp/`（不能只写 `public`）。
 
 ## 新增工具
 

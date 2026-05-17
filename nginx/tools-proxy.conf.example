@@ -1,0 +1,28 @@
+# 与门户同站（同一 server_name）反代各工具 — 粘贴到宝塔站点配置中，
+# 放在 location / { try_files ... } 之前。
+# tools.yaml 里对应工具写 url: https://你的域名/路径/ （见 config/tools.yaml.template）
+#
+# 容器/PHP 进程只监听 127.0.0.1:端口，勿对公网开放端口。
+
+# --- Docker 示例：LibreChat（3080），需 LibreChat .env 配好子路径或改用子域名 ---
+# location /apps/librechat/ {
+#     proxy_pass http://127.0.0.1:3080/;
+#     proxy_http_version 1.1;
+#     proxy_set_header Host $host;
+#     proxy_set_header X-Real-IP $remote_addr;
+#     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#     proxy_set_header X-Forwarded-Proto $scheme;
+#     proxy_set_header Upgrade $http_upgrade;
+#     proxy_set_header Connection "upgrade";
+#     proxy_read_timeout 86400s;
+# }
+
+# --- PHP 工具示例：json-formatter（8101），ToolGate 仍在本机端口上校验 ---
+# location /apps/json-formatter/ {
+#     proxy_pass http://127.0.0.1:8101/;
+#     proxy_set_header Host $host;
+#     proxy_set_header X-Real-IP $remote_addr;
+#     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#     proxy_set_header X-Forwarded-Proto $scheme;
+#     proxy_set_header X-Forwarded-Prefix /apps/json-formatter;
+# }

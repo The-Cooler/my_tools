@@ -16,6 +16,11 @@ final class AuthConfig
     ) {
     }
 
+    public function rootPath(): string
+    {
+        return $this->rootPath;
+    }
+
     public function get(): array
     {
         if ($this->data !== null) {
@@ -41,7 +46,7 @@ final class AuthConfig
 
     public function appSecret(): string
     {
-        return (string) ($this->get()['app_secret'] ?? '');
+        return trim((string) ($this->get()['app_secret'] ?? ''));
     }
 
     public function admin(): array

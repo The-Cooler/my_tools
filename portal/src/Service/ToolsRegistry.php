@@ -11,10 +11,12 @@ final class ToolsRegistry
 {
     private ?array $data = null;
 
+    private readonly RedisConfig $redisConfig;
+
     public function __construct(
         private readonly string $rootPath,
-        private readonly RedisConfig $redisConfig,
     ) {
+        $this->redisConfig = new RedisConfig($rootPath);
     }
 
     public function all(bool $enabledOnly = false): array
@@ -51,6 +53,10 @@ final class ToolsRegistry
                 throw new RuntimeException("External tool [{$tool['id']}] missing url.");
             }
 
+            return (string) $tool['url'];
+        }
+
+        if (!empty($tool['url'])) {
             return (string) $tool['url'];
         }
 

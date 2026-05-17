@@ -33,7 +33,7 @@ final class App
         $redisConfig = new RedisConfig($rootPath);
         $app->add(new SessionMiddleware($redisConfig));
 
-        $registry = new ToolsRegistry($rootPath, $redisConfig);
+        $registry = new ToolsRegistry($rootPath);
         $authConfig = new AuthConfig($rootPath);
         $healthChecker = new HealthChecker();
         $stateStore = new ProcessStateStore($rootPath);

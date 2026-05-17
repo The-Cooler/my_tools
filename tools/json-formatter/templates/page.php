@@ -31,11 +31,19 @@
         }
         .error { color: var(--error); margin-bottom: 1rem; font-size: 0.875rem; }
         .output { white-space: pre-wrap; word-break: break-all; }
-        a.back { color: var(--muted); font-size: 0.875rem; display: inline-block; margin-bottom: 1rem; }
+        a.back {
+            color: var(--muted); font-size: 0.875rem; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.35rem; margin-bottom: 1rem;
+        }
+        a.back:hover { color: var(--text); }
+        a.back .icon-back { width: 1rem; height: 1rem; flex-shrink: 0; }
     </style>
 </head>
 <body>
-    <a class="back" href="http://127.0.0.1:8080/">← 返回工作站</a>
+    <a class="back" href="/" title="返回工作站">
+        <svg class="icon-back" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        <span>返回工作站</span>
+    </a>
     <h1>JSON 格式化</h1>
 
     <?php if ($error !== null): ?>
